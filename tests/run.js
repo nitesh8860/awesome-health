@@ -124,12 +124,14 @@ function makeNode(id) {
     value: FIELDS[id] || '',
     innerHTML: '',
     textContent: '',
-    hidden: false,
+    // Mirrors the `hidden` attribute in index.html for #results and #errors.
+    hidden: id === 'results' || id === 'errors',
     _on: {},
     addEventListener(type, fn) { (this._on[type] = this._on[type] || []).push(fn); },
     dispatch(type, ev) { (this._on[type] || []).forEach((fn) => fn(ev || { preventDefault() {} })); },
     reset() {},
-    scrollIntoView() {}
+    scrolled: false,
+    scrollIntoView() { this.scrolled = true; }
   };
 }
 global.document = {
@@ -147,7 +149,12 @@ require(path.join(root, 'js', 'app.js'));
 document._ready.forEach((fn) => fn());
 
 const $ = (id) => document.getElementById(id);
-ok($('results').hidden === false, 'UI: renders on first load');
+ok($('results').hidden === true, 'UI: first visit shows the inputs, not the results');
+ok($('summary').innerHTML === '', 'UI: nothing rendered before calculating');
+
+// Pressing the button renders the plan.
+$('intake').dispatch('submit');
+ok($('results').hidden === false, 'UI: renders after Calculate');
 ok($('summary').innerHTML.includes('Daily calories'), 'UI: summary rendered');
 ok($('macros').innerHTML.includes('Protein'), 'UI: macros rendered');
 ok($('micros').innerHTML.includes('Vitamin B12'), 'UI: micronutrients rendered');
@@ -167,12 +174,31 @@ $('resetBtn').dispatch('click');
 ok($('errors').hidden === true, 'UI: reset clears errors');
 $('demoBtn').dispatch('click');
 ok($('results').hidden === false, 'UI: example button recalculates');
+ok(Number($('weight').value) === 74, 'UI: example fills the form');
 
 // Changing diet must change the plan, not the numbers.
 $('diet').value = 'nonveg';
 $('intake').dispatch('submit');
 const nonvegMeals = $('meals').innerHTML;
 ok(nonvegMeals.includes('Chicken') || nonvegMeals.includes('Egg'), 'UI: non-veg plan uses non-veg foods');
+
+// A returning visitor (saved inputs) gets the plan rendered without the page
+// jumping past the input block.
+$('results').scrolled = false;
+global.localStorage = {
+  getItem: () => JSON.stringify(FIELDS),
+  setItem() {},
+  removeItem() {}
+};
+const appPath = require.resolve(path.join(root, 'js', 'app.js'));
+delete require.cache[appPath];
+const before = document._ready.length;
+require(appPath);
+document._ready.slice(before).forEach((fn) => fn());
+ok($('results').hidden === false, 'UI: saved inputs render the plan on load');
+ok($('results').scrolled === false, 'UI: load does not jump past the inputs');
+$('intake').dispatch('submit');
+ok($('results').scrolled === true, 'UI: pressing Calculate scrolls to the plan');
 
 /* ---------- report ---------- */
 if (failures) {

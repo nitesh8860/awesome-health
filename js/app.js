@@ -40,13 +40,14 @@
   function restoreForm() {
     try {
       const raw = localStorage.getItem('ah-input');
-      if (!raw) return;
+      if (!raw) return false;
       const data = JSON.parse(raw);
       FIELDS.forEach((k) => {
         if (data[k] == null || data[k] === '') return;
         if ($(k)) $(k).value = data[k];
       });
-    } catch (e) { /* ignore */ }
+      return true;
+    } catch (e) { return false; }
   }
 
   /* ---------- validation ---------- */
@@ -205,8 +206,7 @@
   }
 
   /* ---------- main ---------- */
-  function calculate(e) {
-    if (e) e.preventDefault();
+  function calculate({ scroll = true } = {}) {
     const input = readForm();
     const errors = validate(input);
     const errBox = $('errors');
@@ -238,7 +238,7 @@
     $('workouts').innerHTML = renderWorkouts(workouts, r);
 
     $('results').hidden = false;
-    $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (scroll) $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function reset() {
@@ -253,15 +253,14 @@
       age: 29, gender: 'male', weight: 74, height: 176, neck: 38, waist: 84, hip: 96,
       activity: 'moderate', environment: 'mixed', diet: 'veg', goal: 'fat-loss', days: 4, experience: 'intermediate'
     }).forEach(([k, v]) => { if ($(k)) $(k).value = v; });
-    calculate();
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    restoreForm();
-    $('intake').addEventListener('submit', calculate);
+    const restored = restoreForm();
+    $('intake').addEventListener('submit', (e) => { e.preventDefault(); calculate(); });
     $('intake').addEventListener('change', saveForm);
     $('resetBtn').addEventListener('click', reset);
-    $('demoBtn').addEventListener('click', demo);
+    $('demoBtn').addEventListener('click', () => { demo(); calculate(); });
     $('printBtn').addEventListener('click', () => window.print());
 
     // Live day-count label
@@ -270,6 +269,8 @@
     days.addEventListener('input', updateDays);
     updateDays();
 
-    if ($('age').value) calculate();
+    // Returning visitors get their plan rendered immediately — without the page
+    // jumping past the inputs.
+    if (restored) calculate({ scroll: false });
   });
 })();
