@@ -51,7 +51,7 @@ body {
 /* ---------- layout: inputs on top, plan below ---------- */
 .layout {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   align-items: start;
   padding: 18px 0 40px;
@@ -73,17 +73,26 @@ body {
 .card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .card-head h2 { margin-bottom: 14px; }
 
-.form-card { padding-bottom: 16px; }
+.form-card { padding-bottom: 16px; min-width: 0; }
 
 /* The four input groups sit side by side on wide screens so the whole form —
  * and the Calculate button — stays above the fold. */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(310px, 100%), 1fr));
   gap: 14px;
   align-items: start;
 }
 @media (max-width: 700px) { .form-grid { grid-template-columns: 1fr; } }
+
+/* Number inputs have an intrinsic minimum width and grid/flex children default
+ * to min-width:auto, which used to push the whole page sideways on tablets and
+ * phones. Let everything shrink to its cell. */
+.form-grid > *,
+.grid-2 > *,
+.grid-3 > *,
+.card-head > * { min-width: 0; }
+input, select, label, output { min-width: 0; }
 
 /* ---------- form ---------- */
 fieldset {
@@ -92,18 +101,22 @@ fieldset {
   background: #0d151e;
   margin: 0;
   padding: 12px 14px 14px;
-  display: flow-root; /* contain the floated legend */
+  min-width: 0;
 }
+/* A normal in-flow heading inside the panel. (A floated legend makes the
+ * following grid collapse to 0 width — do not reintroduce that.) */
 legend {
-  float: left; width: 100%;
+  display: block;
+  width: 100%;
   font-size: 12px; text-transform: uppercase; letter-spacing: .12em;
-  color: var(--accent); font-weight: 700; padding: 0 0 6px;
+  color: var(--accent); font-weight: 700; padding: 0 0 8px;
 }
 legend small { text-transform: none; letter-spacing: 0; color: var(--muted); font-weight: 400; }
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 @media (max-width: 460px) { .grid-3 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 380px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
 
 label { display: block; font-size: 12.5px; color: var(--muted); font-weight: 600; }
 .unit { color: #64778b; font-weight: 400; }
@@ -159,7 +172,7 @@ input[type="number"]::placeholder { color: #4c5d70; }
 
 /* Phones: the form is long, so keep the Calculate button floating at the bottom
  * of the viewport while the form is on screen. */
-@media (max-width: 700px) {
+@media screen and (max-width: 700px) {
   .form-card { padding-bottom: 10px; }
   .actions {
     position: sticky; bottom: 0; z-index: 5;
@@ -231,6 +244,20 @@ input[type="number"]::placeholder { color: #4c5d70; }
 /* ---------- tables / micros ---------- */
 .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
 .micro-table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 560px; }
+
+/* Phones: stack each nutrient as a small card so no column is cut off and the
+ * table never needs sideways scrolling. */
+@media screen and (max-width: 620px) {
+  .micro-table { min-width: 0; }
+  .micro-table thead { display: none; }
+  .micro-table, .micro-table tbody, .micro-table tr, .micro-table td { display: block; width: 100%; }
+  .micro-table tr { border-bottom: 1px solid #1a2632; padding: 9px 2px; }
+  .micro-table tr:last-child { border-bottom: 0; }
+  .micro-table td { border: 0; padding: 1px 12px; }
+  .micro-table td.num { text-align: left; }
+  .micro-table td.num::before { content: 'Target: '; color: var(--muted); font-weight: 400; }
+  .micro-table td.src { font-size: 12px; }
+}
 .micro-table th {
   text-align: left; padding: 10px 12px; background: #0d151e;
   font-size: 11.5px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted);

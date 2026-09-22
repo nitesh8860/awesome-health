@@ -111,6 +111,17 @@ for (const asset of ['css/styles.css', 'js/foods.js', 'js/nutrition.js', 'js/mea
   ok(html.includes(asset), `index.html links ${asset}`);
 }
 
+/* CSS regressions caught during development:
+ * - a floated <legend> makes the following .grid-2/.grid-3 collapse to 0 width
+ *   (every input rendered ~24 px wide)
+ * - number inputs have an intrinsic min width and grid children default to
+ *   min-width:auto, which pushed the page sideways below ~800 px */
+const css = fs.readFileSync(path.join(root, 'css', 'styles.css'), 'utf8');
+ok(!/legend\s*\{[^}]*float\s*:/.test(css), 'regression: the legend must not be floated');
+ok(/\.form-grid\s*>\s*\*[\s\S]{0,80}min-width:\s*0/.test(css), 'regression: form-grid children may shrink');
+ok(/minmax\(min\([\d]+px,\s*100%\),\s*1fr\)/.test(css), 'regression: form columns never exceed the viewport');
+ok(!/grid-template-columns:\s*1fr;\s*\n\s*gap/.test(css), 'regression: layout track uses minmax(0,1fr)');
+
 /* ---------- UI integration (minimal DOM shim) ---------- */
 const FIELDS = {
   age: '29', gender: 'male', weight: '74', height: '176', neck: '38', waist: '84', hip: '96',

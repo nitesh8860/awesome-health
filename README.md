@@ -72,7 +72,10 @@ node tests/run.js
 * Age/sex micronutrient rules (iron 18 mg for menstruating women, 8 mg past 51; calcium 1200 mg past 50).
 * 7-day plans: 5 % calorie accuracy per day, ≥75 % of the protein target, sane portion sizes, every template referencing a real food.
 * Workouts for 0–7 days × 3 environments.
-* UI: every `#id` used by `app.js` exists in `index.html`, the page renders without `NaN`/`undefined`, invalid input shows an error, diet switching works.
+* UI: every `#id` used by `app.js` exists in `index.html`, the page renders without `NaN`/`undefined`, invalid input shows an error, diet switching works, and saved inputs render without scrolling.
+* CSS regression guards for the layout bugs found during development: a floated `<legend>` collapses the field grids to 0 px, and number inputs need `min-width: 0` inside grid tracks or the page scrolls sideways below ~800 px.
+
+The layout is verified in headless Chrome from 1600 px down to 320 px (no horizontal scroll, no collapsed field grids, no clipped text, no unusably small controls).
 
 ## Disclaimer
 
