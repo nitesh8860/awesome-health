@@ -1,0 +1,12 @@
+{
+  "name": "vital-health",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Health webapp: body-fat %, TDEE, calories, macros, micronutrients, 7-day meal plan and workout plan from one set of inputs.",
+  "scripts": {
+    "test": "node tests/run.js",
+    "start": "python3 -m http.server 8080"
+  },
+  "keywords": ["health", "nutrition", "tdee", "macros", "meal-plan", "workout"],
+  "license": "MIT"
+}
